@@ -18,6 +18,15 @@ export default {
 };
 
 async function parseForm(request: Request): Promise<Record<string, string>> {
+  const contentType = request.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    try {
+      return await request.json();
+    } catch {
+      return {};
+    }
+  }
+
   const text = await request.text();
   const params = new URLSearchParams(text);
   const result: Record<string, string> = {};
