@@ -17,6 +17,16 @@ export default {
   }
 };
 
+async function parseForm(request: Request): Promise<Record<string, string>> {
+  const text = await request.text();
+  const params = new URLSearchParams(text);
+  const result: Record<string, string> = {};
+  for (const [key, value] of params.entries()) {
+    result[key] = value;
+  }
+  return result;
+}
+
 async function hashPassword(password: string): Promise<string> {
   const buffer = new TextEncoder().encode(password);
   const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
@@ -24,15 +34,9 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 async function signup(request: Request, env: Env): Promise<Response> {
-  let email: string, password: string;
-
-  try {
-    const body = await request.json();
-    email = body.email;
-    password = body.password;
-  } catch {
-    return json({ error: "Invalid JSON body" }, 400);
-  }
+  const body = await parseForm(request);
+  const email = body.email;
+  const password = body.password;
 
   if (!email || !password) {
     return json({ error: "Missing email or password" }, 400);
@@ -60,15 +64,9 @@ async function signup(request: Request, env: Env): Promise<Response> {
 }
 
 async function login(request: Request, env: Env): Promise<Response> {
-  let email: string, password: string;
-
-  try {
-    const body = await request.json();
-    email = body.email;
-    password = body.password;
-  } catch {
-    return json({ error: "Invalid JSON body" }, 400);
-  }
+  const body = await parseForm(request);
+  const email = body.email;
+  const password = body.password;
 
   if (!email || !password) {
     return json({ error: "Missing credentials" }, 400);
@@ -103,14 +101,8 @@ async function getSettings(request: Request, env: Env): Promise<Response> {
 
 async function updateSettings(request: Request, env: Env): Promise<Response> {
   const userId = request.headers.get("X-User-ID");
-  let theme: string;
-
-  try {
-    const body = await request.json();
-    theme = body.theme;
-  } catch {
-    return json({ error: "Invalid JSON body" }, 400);
-  }
+  const body = await parseForm(request);
+  const theme = body.theme;
 
   if (!userId || !theme) {
     return json({ error: "Missing data" }, 400);
