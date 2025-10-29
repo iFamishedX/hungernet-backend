@@ -23,27 +23,33 @@ async function parseForm(request: Request): Promise<Record<string, string>> {
 
   console.log("📦 Content-Type:", contentType);
 
-  if (contentType.includes("application/json")) {
-    try {
+  try {
+    if (contentType.includes("application/json")) {
       return await request.json();
-    } catch (err) {
-      console.log("❌ JSON parse error:", err);
-      return {};
     }
-  }
 
-  if (contentType.includes("application/x-www-form-urlencoded")) {
+    if (contentType.includes("application/x-www-form-urlencoded")) {
+      const text = await request.text();
+      console.log("🧾 Raw form body:", text);
+      const params = new URLSearchParams(text);
+      for (const [key, value] of params.entries()) {
+        result[key] = value;
+      }
+      return result;
+    }
+
+    // Fallback: try parsing as URLSearchParams no matter what
     const text = await request.text();
-    console.log("🧾 Raw form body:", text);
+    console.log("🧾 Raw fallback body:", text);
     const params = new URLSearchParams(text);
     for (const [key, value] of params.entries()) {
       result[key] = value;
     }
     return result;
+  } catch (err) {
+    console.log("❌ Failed to parse form:", err);
+    return {};
   }
-
-  console.log("⚠️ Unknown content-type:", contentType);
-  return {};
 }
 
 async function hashPassword(password: string): Promise<string> {
