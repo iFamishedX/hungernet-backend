@@ -19,21 +19,31 @@ export default {
 
 async function parseForm(request: Request): Promise<Record<string, string>> {
   const contentType = request.headers.get("content-type") || "";
+  const result: Record<string, string> = {};
+
+  console.log("📦 Content-Type:", contentType);
+
   if (contentType.includes("application/json")) {
     try {
       return await request.json();
-    } catch {
+    } catch (err) {
+      console.log("❌ JSON parse error:", err);
       return {};
     }
   }
 
-  const text = await request.text();
-  const params = new URLSearchParams(text);
-  const result: Record<string, string> = {};
-  for (const [key, value] of params.entries()) {
-    result[key] = value;
+  if (contentType.includes("application/x-www-form-urlencoded")) {
+    const text = await request.text();
+    console.log("🧾 Raw form body:", text);
+    const params = new URLSearchParams(text);
+    for (const [key, value] of params.entries()) {
+      result[key] = value;
+    }
+    return result;
   }
-  return result;
+
+  console.log("⚠️ Unknown content-type:", contentType);
+  return {};
 }
 
 async function hashPassword(password: string): Promise<string> {
@@ -46,6 +56,8 @@ async function signup(request: Request, env: Env): Promise<Response> {
   const body = await parseForm(request);
   const email = body.email;
   const password = body.password;
+
+  console.log("📥 Parsed signup body:", body);
 
   if (!email || !password) {
     return json({ error: "Missing email or password" }, 400);
@@ -76,6 +88,8 @@ async function login(request: Request, env: Env): Promise<Response> {
   const body = await parseForm(request);
   const email = body.email;
   const password = body.password;
+
+  console.log("📥 Parsed login body:", body);
 
   if (!email || !password) {
     return json({ error: "Missing credentials" }, 400);
