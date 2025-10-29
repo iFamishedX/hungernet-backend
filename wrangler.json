@@ -1,0 +1,16 @@
+{
+  "compatibility_date": "2025-10-08",
+  "main": "src/index.ts",
+  "name": "hungernet-backend",
+  "upload_source_maps": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_id": "daac9eb3-a63d-4a88-831e-81b04fb50b53",
+      "database_name": "hungernet-backend-db"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}
