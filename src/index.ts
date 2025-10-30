@@ -30,7 +30,7 @@ async function parseForm(request: Request): Promise<Record<string, string>> {
 
     if (contentType.includes("application/x-www-form-urlencoded")) {
       const text = await request.text();
-      console.log("🧾 Raw form body:", text);
+      console.log("🧾 Form body:", text);
       const params = new URLSearchParams(text);
       for (const [key, value] of params.entries()) {
         result[key] = value;
@@ -38,13 +38,26 @@ async function parseForm(request: Request): Promise<Record<string, string>> {
       return result;
     }
 
-    // Fallback: try parsing as URLSearchParams no matter what
+    // Fallback: try parsing as query string or line-separated key=value
     const text = await request.text();
-    console.log("🧾 Raw fallback body:", text);
-    const params = new URLSearchParams(text);
-    for (const [key, value] of params.entries()) {
-      result[key] = value;
+    console.log("🧾 Fallback body:", text);
+
+    if (text.includes("=")) {
+      const params = new URLSearchParams(text);
+      for (const [key, value] of params.entries()) {
+        result[key] = value;
+      }
+      return result;
     }
+
+    const lines = text.split("\n");
+    for (const line of lines) {
+      const [key, value] = line.split("=");
+      if (key && value) {
+        result[key.trim()] = value.trim();
+      }
+    }
+
     return result;
   } catch (err) {
     console.log("❌ Failed to parse form:", err);
