@@ -26,10 +26,19 @@ async function parseForm(request: Request): Promise<Record<string, string>> {
   console.log("📦 Content-Type:", contentType);
 
   try {
+    if (contentType.includes("multipart/form-data")) {
+      const form = await request.formData();
+      for (const [key, value] of form.entries()) {
+        if (typeof value === "string") {
+          result[key] = value;
+        }
+      }
+      return result;
+    }
+
     const text = await request.text();
     console.log("🧾 Raw body:", text);
 
-    // Try URLSearchParams first
     if (text.includes("&") || contentType.includes("urlencoded")) {
       const params = new URLSearchParams(text);
       for (const [key, value] of params.entries()) {
@@ -38,7 +47,6 @@ async function parseForm(request: Request): Promise<Record<string, string>> {
       return result;
     }
 
-    // Fallback: line-separated key=value pairs
     const lines = text.split("\n");
     for (const line of lines) {
       const [key, value] = line.split("=");
