@@ -8,6 +8,8 @@ export default {
     const path = url.pathname;
     const method = request.method;
 
+    console.log("📡 Incoming request:", method, path);
+
     if (path === "/signup" && method === "POST") return signup(request, env);
     if (path === "/login" && method === "POST") return login(request, env);
     if (path === "/settings" && method === "GET") return getSettings(request, env);
@@ -24,25 +26,11 @@ async function parseForm(request: Request): Promise<Record<string, string>> {
   console.log("📦 Content-Type:", contentType);
 
   try {
-    if (contentType.includes("application/json")) {
-      return await request.json();
-    }
-
-    if (contentType.includes("application/x-www-form-urlencoded")) {
-      const text = await request.text();
-      console.log("🧾 Form body:", text);
-      const params = new URLSearchParams(text);
-      for (const [key, value] of params.entries()) {
-        result[key] = value;
-      }
-      return result;
-    }
-
-    // Fallback: try parsing as query string or line-separated key=value
     const text = await request.text();
-    console.log("🧾 Fallback body:", text);
+    console.log("🧾 Raw body:", text);
 
-    if (text.includes("=")) {
+    // Try URLSearchParams first
+    if (text.includes("&") || contentType.includes("urlencoded")) {
       const params = new URLSearchParams(text);
       for (const [key, value] of params.entries()) {
         result[key] = value;
@@ -50,6 +38,7 @@ async function parseForm(request: Request): Promise<Record<string, string>> {
       return result;
     }
 
+    // Fallback: line-separated key=value pairs
     const lines = text.split("\n");
     for (const line of lines) {
       const [key, value] = line.split("=");
