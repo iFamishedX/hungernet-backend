@@ -94,7 +94,8 @@ async function signup(request: Request, env: Env): Promise<Response> {
       "INSERT INTO user_settings (user_id, theme) VALUES (?, ?)"
     ).bind(user.id, "light").run();
 
-    return json({ message: "User created", userId: user.id });
+    // ✅ Redirect to your custom success page
+    return Response.redirect("https://hungernetsuccess.carrd.co", 303);
   } catch (err: any) {
     return json({ error: `Signup failed: ${err.message || err}` }, 500);
   }
